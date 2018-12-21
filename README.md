@@ -87,3 +87,13 @@ user=> (pprint (d/macroexpansion-steps form))
      b)))))
 nil
 ```
+
+## Caveat and Limitations
+
+It currently won't be able to follow through dependencies of functions not installed via `def` (e.g. functions generated as part of runtime metaprogramming or via `intern`)
+
+## License
+
+Copyright © 2015-2018 Nicola Mometto.
+
+Distributed under the Eclipse Public License, the same as Clojure.
