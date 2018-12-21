@@ -17,20 +17,22 @@
          (j.e/-emit-form* ast {})))))
 
 (defn deps
-  "Takes a form and returns a set of the vars it (directly) depends on,
+  "Takes a form or a var and returns a set of the vars it (directly) depends on,
    up to function call boundaries"
   [form]
-  (let [deps      (atom #{})
-        mexpander (fn [form env]
-                    (let [f (if (seq? form) (first form) form)
-                          v (u/resolve-sym f env)]
-                      (when-let [var? (and (not (-> env :locals (get f)))
-                                           (var? v))]
-                        (swap! deps conj v)))
-                    (a.j/macroexpand-1 form env))]
-    (a.j/analyze form (a.j/empty-env)
-                 {:bindings {#'a/macroexpand-1 mexpander}})
-    @deps))
+  (if (var? form)
+    #{form}
+    (let [deps      (atom #{})
+          mexpander (fn [form env]
+                      (let [f (if (seq? form) (first form) form)
+                            v (u/resolve-sym f env)]
+                        (when-let [var? (and (not (-> env :locals (get f)))
+                                             (var? v))]
+                          (swap! deps conj v)))
+                      (a.j/macroexpand-1 form env))]
+      (a.j/analyze form (a.j/empty-env)
+                   {:bindings {#'a/macroexpand-1 mexpander}})
+      @deps)))
 
 (def ^:private env (a.j/global-env))
 
@@ -65,12 +67,13 @@
                    (conj transitive-deps v)))))
             (into #{}))))))
 
-(defn macroexpansion-steps
-  "Takes a form and returns a seq of all the macroexpansion steps
-   the compiler will apply.
-   If include-meta? is true, will include the macroexpansion steps of
+(defn expansion-steps
+  "Takes a form and returns a seq of all the expansion steps
+   the compiler will apply, which includes macroexpansion, inlining,
+   normalizations and more.
+   If include-meta? is true, will include the expansion steps of
    metadata forms."
-  ([form] (macroexpansion-steps form false))
+  ([form] (expansion-steps form false))
   ([form include-meta?]
    (let [a    (a.j/analyze form)
          c    (count (mapcat :raw-forms (ast/nodes a)))

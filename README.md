@@ -1,6 +1,6 @@
 # tools.analyzer.jvm.deps
 
-A small library providing a couple of utility functions on top of `tools.analyzer.jvm` for code dependency analysis
+A small library providing a couple of utility functions on top of [tools.analyzer.jvm](https://github.com/clojure/tools.analyzer.jvm) for code dependency analysis
 
 ## Example Usage
 
@@ -17,29 +17,31 @@ user=> (pprint (d/deps form))
   #'clojure.core/fn}
 nil
 
-user=> (pprint (d/transitive-deps form))
+user=> (pprint (d/transitive-deps #'+))
 #{#'clojure.core/seq
-  #'clojure.core/fn
+  #'clojure.core/>1?
+  #'clojure.core/chunk-next
   #'clojure.core/next
   #'clojure.core/chunked-seq?
   #'clojure.core/chunk-first
   #'clojure.core/seq?
   #'clojure.core/sequence
   #'clojure.core/list
+  #'clojure.core/cast
   #'clojure.core/instance?
-  #'clojure.core/if-let
+  #'clojure.core/+
   #'clojure.core/first
   #'clojure.core/*unchecked-math*
   #'clojure.core/chunk-cons
   #'clojure.core/chunk-rest
-  #'clojure.core/let
+  #'clojure.core/nary-inline
   #'clojure.core/map
   #'clojure.core/concat
-  #'clojure.core/inc
+  #'clojure.core/reduce1
   #'clojure.core/cons
   #'clojure.core/rest}
 
-user=> (pprint (d/macroexpansion-steps form))
+user=> (pprint (d/expansion-steps form))
 ((fn* ([b] (if-let [a (seq (map inc b))] (cons 0 a) b)))
  (fn [b] (if-let [a (seq (map inc b))] (cons 0 a) b))
  (fn* ([b] (do (if-let [a (seq (map inc b))] (cons 0 a) b))))
