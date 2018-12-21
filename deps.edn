@@ -1,0 +1,4 @@
+{:deps
+ {org.clojure/tools.analyzer.jvm {:mvn/version "0.7.2"}
+  org.clojure/tools.analyzer {:mvn/version "0.7.0"}}
+ :paths ["src"]}
