@@ -15,7 +15,8 @@
          (j.e/-emit-form* ast {})))))
 
 (defn deps
-  "Takes a form and returns a (non-transitive) set of the vars it depends on"
+  "Takes a form and returns a set of the vars it (directly) depends on,
+   up to function call boundaries"
   [form]
   (let [deps      (atom #{})
         mexpander (fn [form env]
