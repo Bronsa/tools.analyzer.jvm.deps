@@ -2,7 +2,9 @@
   (:require
    [clojure.tools.analyzer :as a]
    [clojure.tools.analyzer.jvm :as a.j]
+   [clojure.tools.analyzer.jvm.utils :as j.u]
    [clojure.tools.analyzer.ast :as ast]
+   [clojure.tools.analyzer.env :as env]
    [clojure.tools.analyzer.utils :as u]
    [clojure.tools.analyzer.passes.jvm.emit-form :as j.e]
    [clojure.tools.analyzer.passes.emit-form :as e]))
@@ -29,6 +31,38 @@
     (a.j/analyze form (a.j/empty-env)
                  {:bindings {#'a/macroexpand-1 mexpander}})
     @deps))
+
+(def ^:private env (a.j/global-env))
+
+(defn ^:private path-for [ns]
+  (let [res ^java.net.URL (j.u/ns-url ns)]
+    (assert res (str "Can't find " ns " in classpath"))
+    (let [filename (str res)]
+      (.getPath res))))
+
+(defn transitive-deps
+  "Like deps, but resolves transitive dependencies through function call boundaries"
+  ([form] (transitive-deps form #{}))
+  ([form seen]
+   (env/ensure env
+     (let [direct-deps (deps form)]
+       (run! (comp a.j/analyze-ns symbol namespace symbol) direct-deps)
+       (->> direct-deps
+            (mapcat
+             (fn [v]
+               (if (contains? seen v)
+                 []
+                 (let [sym (symbol v)
+                       ns (symbol (namespace sym))
+                       v-ast (->> (get-in (env/deref-env) [::a.j/analyzed-clj (path-for ns)])
+                                  (filter (every-pred (comp #{:def} :op)
+                                                      (comp #{(symbol (name sym))} :name)))
+                                  first)
+                       transitive-deps (when v-ast
+                                         (binding [*ns* (the-ns ns)]
+                                           (transitive-deps (j.e/emit-form v-ast) (conj seen v))))]
+                   (conj transitive-deps v)))))
+            (into #{}))))))
 
 (defn macroexpansion-steps
   "Takes a form and returns a seq of all the macroexpansion steps
