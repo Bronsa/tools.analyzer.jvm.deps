@@ -41,7 +41,8 @@
       (.getPath res))))
 
 (defn transitive-deps
-  "Like deps, but resolves transitive dependencies through function call boundaries"
+  "Like deps, but attempts to resolve transitive dependencies through
+   function call boundaries."
   ([form] (transitive-deps form #{}))
   ([form seen]
    (env/ensure env
