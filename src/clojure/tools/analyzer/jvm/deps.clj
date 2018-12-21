@@ -30,12 +30,12 @@
                  {:bindings {#'a/macroexpand-1 mexpander}})
     @deps))
 
-(defn mexpansion-steps
+(defn macroexpansion-steps
   "Takes a form and returns a seq of all the macroexpansion steps
    the compiler will apply.
    If include-meta? is true, will include the macroexpansion steps of
    metadata forms."
-  ([form] (mexpansion-steps form false))
+  ([form] (macroexpansion-steps form false))
   ([form include-meta?]
    (let [a    (a.j/analyze form)
          c    (count (mapcat :raw-forms (ast/nodes a)))
