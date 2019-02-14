@@ -88,3 +88,14 @@
                   (conj asts a)))]
      ((if include-meta? identity dedupe)
       (mapv mexpansions asts)))))
+
+(defn find-undefined-locals
+  "Takes a form and returns a set of all the free locals in it"
+  [expr]
+  (->> (binding [a.j/run-passes identity]
+         (a.j/analyze expr (a.j/empty-env)))
+       ast/nodes
+       (filter (fn [{:keys [op]}] (= op :maybe-class)))
+       (map :class)
+       (remove (fn [x] (-> x str (.contains "."))))
+       (into #{})))
